@@ -1,0 +1,35 @@
+# ===== Python / 运行时 =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ===== 配置与密钥 =====
+.env
+
+# ===== 运行时数据（启动后自动生成）=====
+sqlite.db
+sqlite.db-journal
+chroma_db/
+*.db-journal
+
+# ===== 测试/临时产物 =====
+.probe_*.db*
+.smoke_test.db*
+*.pyc
+
+# ===== IDE / 系统 =====
+.idea/
+.vscode/
+.DS_Store
+
+# ===== 工具缓存 =====
+.workbuddy-ai/
+
+# ===== 开源参考项目克隆（各自为独立 git 仓库，不随主项目提交）=====
+AstrBot/
+GirlfriendGPT/
+HerAndHim/
+letta/
+mem0/
