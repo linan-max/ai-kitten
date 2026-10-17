@@ -297,7 +297,7 @@ security.py ◄── config + bcrypt + jose
 
 以下 5 个子目录是**上游开源项目的完整克隆**（各自含 `.git`，与主程序同仓库共存）。主程序运行时**不会 import** 其中任何模块——它们的价值是作为**设计参考源码**：`main.py` / `schema.sql` / `prompt_templates.py` 中的相关实现，是在研读这些源码后按本项目技术栈（FastAPI + SQLite）重新落地，而非代码级拷贝（仅有 `mem0` 通过 pip 安装的 `mem0ai` 包在运行时被调用）。
 
-> 许可证注意：`AstrBot/` 与 `HerAndHim/` 为 **AGPL-3.0**（有传染性），若本项目对外分发或商用派生作品，需评估许可合规；`letta/`、`mem0/` 为 **Apache-2.0**（宽松友好）。当前仓库自身未声明许可证。
+> 许可证注意：`AstrBot/` 与 `HerAndHim/` 为 **AGPL-3.0**（有传染性）；本仓库自身已采用 **AGPL-3.0**（见根目录 `LICENSE`），与参考项目许可一致，对外分发或商用派生作品时请遵守 AGPL-3.0 义务（如公开源代码）；`letta/`、`mem0/` 为 Apache-2.0（宽松友好）。
 
 #### 7.3.1 HerAndHim（核心借鉴源，v2.1 主要融合对象）
 
