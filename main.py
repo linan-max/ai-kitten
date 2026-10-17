@@ -606,7 +606,7 @@ async def _extract_story_event(session: dict, user: CurrentUser, user_input: str
         await db.aexecute(
             """INSERT INTO story_timeline
                (user_id, agent_id, session_id, event_summary, tags, causal_parent_id, branch_id, is_manual, sentiment, topic)
-               VALUES (?,?,?,?,?,?,?,?,?,0)""",
+               VALUES (?,?,?,?,?,?,?,0,?,?)""",
             (
                 user.id,
                 session["agent_id"],
