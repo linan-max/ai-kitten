@@ -1,7 +1,7 @@
 # NexusCompanion Code Wiki
 
 > 面向开发者的结构化代码导航文档。覆盖：整体架构、模块职责、关键类与函数、依赖关系、数据模型与运行方式。
-> 版本基线：v2.1（融合 HerAndHim / AstrBot / mem0 / Mufy 设计思路）。
+> 版本基线：v2.1（融合 HerAndHim / AstrBot / mem0 / 长篇叙事设计思路）。
 
 ---
 
@@ -12,7 +12,7 @@
 | 会话模式 | `session_type` | 记忆方式 | 特点 |
 |---|---|---|---|
 | **Cakumi 人设锁会话** | `cakumi` | 静态显式人设（`static_memory`）+ Mem0 向量 RAG 动态记忆（`memory.py`） | 锁人设、防 OOC，不生成剧情时间线 |
-| **Mufy 长篇叙事会话** | `mufy` | 时序剧情事件时间线（`story_timeline`）+ 可选继承静态人设 | 支持事件因果、剧情分支、冲突检测，不使用 Mem0 |
+| **长篇叙事会话** | `mufy` | 时序剧情事件时间线（`story_timeline`）+ 可选继承静态人设 | 支持事件因果、剧情分支、冲突检测，不使用 Mem0 |
 
 > 两种模式数据完全隔离：同一角色可并行创建多条不同类型会话互不干扰；`session_type` 创建后不可修改。
 
@@ -160,7 +160,7 @@ memory_manager.py  → 独立模块，无 import 方（历史遗留，见 §6.7�
 |---|---|---|
 | `RegisterRequest` | username 2-32 / password 6-128 | 注册 |
 | `LoginRequest` | username / password | 登录 |
-| `AgentCreate` / `AgentUpdate` | name, avatar, persona_prompt, opening_message + Mufy 富字段（gender/appearance/author_note/sample_dialogue/sidebar_data/tags） | 角色卡 |
+| `AgentCreate` / `AgentUpdate` | name, avatar, persona_prompt, opening_message + 长篇叙事富字段（gender/appearance/author_note/sample_dialogue/sidebar_data/tags） | 角色卡 |
 | `SessionCreate` | agent_id, session_name, **session_type ∈ {cakumi, mufy}**, inherit_static_memory | 创建会话 |
 | `ChatRequest` | session_id, user_input ≤4000, stream | 聊天 |
 | `StaticMemoryAdd/Update` | content ≤2000, note ≤200 | 静态记忆 |
@@ -241,12 +241,12 @@ POST /chat
 |---|---|---|
 | `users` | 用户 | username UNIQUE, password_hash |
 | `user_llm_config` | 每用户 LLM 配置 | model_provider / model_name / api_key / base_url，FK→users |
-| `agents` | 角色卡（Mufy 富卡） | persona_prompt、gender/appearance/author_note/sample_dialogue/sidebar_data、tags(JSON) |
+| `agents` | 角色卡（长篇叙事富卡） | persona_prompt、gender/appearance/author_note/sample_dialogue/sidebar_data、tags(JSON) |
 | `player_character` | 玩家面具 | UNIQUE(user_id) |
 | `sessions` | 会话 | **session_type**（cakumi/mufy，创建后不可改）、inherit_static_memory |
 | `messages` | 聊天消息 | role / content，索引 idx_messages_session |
 | `static_memory` | Cakumi 静态人设（按 agent 共享） | content / note |
-| `story_timeline` | Mufy 剧情事件 | event_summary、tags、causal_parent_id、**branch_id**（分支预留）、is_manual、sentiment、topic |
+| `story_timeline` | 剧情事件 | event_summary、tags、causal_parent_id、**branch_id**（分支预留）、is_manual、sentiment、topic |
 | `session_summary` | 滚动摘要（每会话唯一） | session_id UNIQUE、summary_text、covered_until_msg_id |
 | `kv_memory` | KV 动态记忆（HerAndHim） | UNIQUE(user_id, agent_id, key)，value 最新覆盖 |
 | `relationship_state` | 关系状态 | UNIQUE(user_id, agent_id)、intimacy_score 0-100、stage |
@@ -339,7 +339,7 @@ security.py ◄── config + bcrypt + jose
 | HerAndHim | KV 动态记忆 / 关系状态 / 情感日志 / 时间线 sentiment+topic | `kv_memory`、`relationship_state`、`emotional_log` 表 + 相应端点 |
 | AstrBot | 长对话滚动摘要 | `session_summary` 表 + `_refresh_summary_if_needed` |
 | mem0 | 向量 RAG 动态记忆 | [memory.py](file:///Users/nan/ai-kitten/memory.py)（仅 Cakumi 会话） |
-| Mufy 思路（概念） | 时序剧情时间线 + 分支因果 | `story_timeline` 表（`branch_id` / `causal_parent_id` 预留） |
+| 长篇叙事思路（概念） | 时序剧情时间线 + 分支因果 | `story_timeline` 表（`branch_id` / `causal_parent_id` 预留） |
 
 > 维护建议：这些目录均为完整 git 仓库，与主项目代码无 import 依赖；如需精简仓库体积可整体移除（移除后仅丢失「参考源码」价值，不影响运行）。
 
@@ -361,7 +361,7 @@ security.py ◄── config + bcrypt + jose
 | `NEXUS_SUMMARY_THRESHOLD` | 30 | 触发滚动摘要的消息总数 |
 | `NEXUS_RAG_TOP_K` | 5 | Mem0 检索条数 |
 | `NEXUS_MEM0_ENABLED` | true | Mem0 开关 |
-| `NEXUS_CONFLICT_CHECK_ENABLED` | false | Mufy 写时间线前的人设冲突检测 |
+| `NEXUS_CONFLICT_CHECK_ENABLED` | false | 写时间线前的人设冲突检测 |
 
 ---
 
@@ -435,7 +435,7 @@ curl -X POST http://127.0.0.1:8000/chat \
 
 1. **新建会话**：登录 → 选/建角色 → 选模式（cakumi/mufy，mufy 可勾选继承静态人设）→ `POST /sessions`。
 2. **Cakumi 聊天**：user 消息落库 → 读静态人设 + Mem0 RAG → `build_cakumi_messages` → LLM 回复落库 → 后台 Mem0 抽取细碎记忆 + 情感日志 + 摘要刷新；**不碰 timeline**。
-3. **Mufy 聊天**：user 消息落库 → 读时间线 → `build_mufy_messages` → 回复落库 → 后台剧情事件抽取（+可选冲突检测）；**不调 Mem0**。
+3. **长篇叙事聊天**：user 消息落库 → 读时间线 → `build_mufy_messages` → 回复落库 → 后台剧情事件抽取（+可选冲突检测）；**不调 Mem0**。
 4. **长对话**：最近 `RECENT_KEEP` 条原文 + 早期 `session_summary` 滚动摘要共同进入上下文，后台按阈值增量压缩。
 
 ---

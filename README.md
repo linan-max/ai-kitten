@@ -3,7 +3,7 @@
 自研 AI 伴侣 Web 应用｜双模式会话隔离
 
 - **Cakumi 人设锁会话 (session_type = cakumi)**：静态显式人设记忆 + Mem0 RAG 动态人物记忆，自动记住细碎信息，不生成剧情时间线，目标是锁人设、防 OOC。
-- **Mufy 长篇叙事会话 (session_type = mufy)**：时序剧情事件时间线，支持事件因果、剧情分支、存档跳转；不使用 Mem0 动态记忆，可选择是否继承角色静态人设，支持剧情改变人物状态。
+- **长篇叙事会话 (session_type = mufy)**：时序剧情事件时间线，支持事件因果、剧情分支、存档跳转；不使用 Mem0 动态记忆，可选择是否继承角色静态人设，支持剧情改变人物状态。
 
 > 重要：两种会话数据隔离，同一角色可并行创建多条不同类型会话，互不干扰。
 
@@ -13,7 +13,7 @@
 |---|---|---|
 | LLM 调用 | 占位符 TODO | OpenAI 兼容网关（DeepSeek/Ollama/OneAPI…），支持每用户 Key、温度/Token 配置 |
 | 流式 | 无 | `POST /chat` 加 `stream=true` 即返回 SSE 流 |
-| Mufy 事件抽取 | `pass` 空实现 | 真实跑通：LLM 判定 → JSON 解析 → 写入时间线，可选人设冲突检测 |
+| 剧情事件抽取 | `pass` 空实现 | 真实跑通：LLM 判定 → JSON 解析 → 写入时间线，可选人设冲突检测 |
 | 认证 | 无 | 注册 / 登录 / JWT，全端点鉴权（`NEXUS_AUTH_ENABLED=false` 可免登录开发） |
 | 长上下文 | 全量历史拼接 | 窗口化（最近 16 条原文）+ 滚动摘要（`session_summary` 表，后台异步刷新） |
 | CRUD | 仅静态记忆/时间线 | 用户、角色卡、会话、消息、静态记忆、时间线、LLM 配置全覆盖 |
@@ -29,7 +29,7 @@
 | **HerAndHim** | 时间线事件加 sentiment/topic 字段 | `story_timeline` 表 + 剧情抽取 Prompt |
 | **AstrBot** | 长对话滚动摘要（最近N条原文 + 早期摘要） | `session_summary` 表（已有，保留） |
 | **mem0** | 向量 RAG 检索（动态人物记忆） | `memory.py`（已有，保留） |
-| **Mufy 思路** | 时序剧情时间线 + 分支因果 | `story_timeline` 表（已有，增强字段） |
+| **长篇叙事思路** | 时序剧情时间线 + 分支因果 | `story_timeline` 表（已有，增强字段） |
 
 > 新增后台任务：每轮聊天结束后，自动调用 LLM 分析情感，写入 `emotional_log`，并根据情感分微调亲密度（正向+1/负向-1）。
 
@@ -70,7 +70,7 @@ uvicorn main:app --reload
 | `NEXUS_DB_PATH` / `NEXUS_CHROMA_PATH` | 项目目录 | 数据库 / 向量库路径 |
 | `NEXUS_RECENT_KEEP` | 16 | 进入 Prompt 的最近消息条数 |
 | `NEXUS_SUMMARY_THRESHOLD` | 30 | 触发滚动摘要的消息总数阈值 |
-| `NEXUS_CONFLICT_CHECK_ENABLED` | false | Mufy 写时间线前是否校验人设冲突 |
+| `NEXUS_CONFLICT_CHECK_ENABLED` | false | 写时间线前是否校验人设冲突 |
 | `NEXUS_MEM0_ENABLED` | true | Mem0 开关 |
 
 ## API 一览
@@ -96,7 +96,7 @@ uvicorn main:app --reload
 
 1. `static_memory`（静态人设记忆）绑定 `agent_id`，该角色所有会话共享；叙事会话可开关是否加载。
 2. Cakumi 会话：使用 Mem0，不读写 `story_timeline`。
-3. Mufy 叙事会话：使用 `story_timeline`，不调用 Mem0 抽取记忆。
+3. 长篇叙事会话：使用 `story_timeline`，不调用 Mem0 抽取记忆。
 4. 会话一旦创建，`session_type` 不可修改；需要切换模式只能新建会话。
 
 ## 目录结构
@@ -122,7 +122,7 @@ NexusCompanion/
 ## 后续路线
 
 - 阶段 1：基础底座 + Cakumi 人设锁会话 ✅
-- 阶段 2：Mufy 叙事会话模块（时间线、剧情事件、分支存档）✅（抽取已跑通，分支字段已预留）
+- 阶段 2：长篇叙事会话模块（时间线、剧情事件、分支存档）✅（抽取已跑通，分支字段已预留）
 - 阶段 3：LLM 网关接入 Ollama 内置模型（配置即用）
 - 阶段 4：长对话摘要 ✅ / UI 打磨 / 角色卡导入导出（JSON）
 - 阶段 5：PostgreSQL 迁移、多端登录、对话导出
