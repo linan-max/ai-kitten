@@ -18,6 +18,8 @@ chroma_db/
 .probe_*.db*
 .smoke_test.db*
 *.pyc
+# 终端会话产生的 8 位随机临时文件
+????????
 
 # ===== IDE / 系统 =====
 .idea/
